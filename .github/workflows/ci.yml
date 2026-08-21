@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancela execuções anteriores do mesmo PR/branch quando um novo push chega.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    # Credenciais alinhadas com os defaults de tests/conftest.py, para que os
+    # testes de integração conectem sem configuração extra.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: mec_inep_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test_user -d mec_inep_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: mec_inep_test
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instalar uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Instalar Python
+        run: uv python install 3.12
+
+      - name: Sincronizar dependências
+        run: uv sync --frozen
+
+      - name: Lint (ruff check)
+        run: uv run ruff check .
+
+      - name: Formatação (ruff format --check)
+        run: uv run ruff format --check .
+
+      - name: Checagem de tipos (mypy)
+        run: uv run mypy src/
+
+      - name: Testes (pytest, unitários + integração)
+        run: uv run pytest -v --cov --cov-report=term-missing
+
+      - name: Testes unitários do SQLMesh
+        working-directory: sqlmesh
+        run: uv run sqlmesh test

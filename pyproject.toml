@@ -1,0 +1,80 @@
+[project]
+name = "mec-inep-pipeline"
+version = "0.1.0"
+description = "Pipeline de engenharia de dados (extração, carga e transformação) para dados de educação básica do MEC/INEP, usando dlt e SQLMesh."
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [
+    { name = "Time de Dados" },
+]
+dependencies = [
+    "dlt[postgres]>=1.30.0",
+    "openpyxl>=3.1.5",
+    "pydantic-settings>=2.15.0",
+    "pyyaml>=6.0.3",
+    "sqlmesh>=0.236.1",
+    "typer>=0.27.1",
+]
+
+[project.scripts]
+# Permite rodar `uv run mec-inep --help` em vez do caminho completo do módulo.
+mec-inep = "mec_inep_pipeline.cli.main:app"
+
+[build-system]
+requires = ["uv_build>=0.11.7,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "mypy>=2.3.1",
+    "pandas-stubs>=3.0.5.260730",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "pytest-mock>=3.15.1",
+    "responses>=0.26.2",
+    "ruff>=0.16.4",
+    "types-pyyaml>=6.0.12.20260815",
+    "types-requests>=2.33.0.20260712",
+]
+
+# ------------------------------------------------------------------------------
+# pytest
+# ------------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = [
+    "unit: testes unitários, rápidos e sem dependências externas",
+    "integration: testes que dependem de um Postgres real (ver tests/integration)",
+]
+addopts = "-ra --strict-markers"
+
+[tool.coverage.run]
+source = ["src/mec_inep_pipeline"]
+omit = ["*/tests/*"]
+
+# ------------------------------------------------------------------------------
+# ruff (lint + format)
+# ------------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "C4"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["mec_inep_pipeline"]
+
+# ------------------------------------------------------------------------------
+# mypy
+# ------------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.12"
+mypy_path = "src"
+explicit_package_bases = true
+ignore_missing_imports = true
+disallow_untyped_defs = false
+warn_unused_ignores = true

@@ -1,0 +1,36 @@
+# ==============================================================================
+# Configuração do SQLMesh
+# ------------------------------------------------------------------------------
+# O SQLMesh transforma os dados já carregados pelo dlt no schema "raw" do
+# Postgres (ver POSTGRES_RAW_SCHEMA no .env) em modelos analíticos, organizados
+# em staging/ -> intermediate/ -> marts/.
+#
+# As credenciais NÃO ficam hardcoded aqui — o SQLMesh lê variáveis de ambiente
+# via a sintaxe "{{ env_var('NOME') }}", então basta ter o .env carregado no
+# shell (ex.: `set -a && source .env && set +a`) antes de rodar `sqlmesh plan`.
+# Um helper para isso está em scripts/load_env.sh.
+# ==============================================================================
+
+gateways:
+  postgres:
+    connection:
+      type: postgres
+      host: "{{ env_var('POSTGRES_HOST', 'localhost') }}"
+      port: "{{ env_var('POSTGRES_PORT', 5432) }}"
+      database: "{{ env_var('POSTGRES_DB', 'mec_inep') }}"
+      user: "{{ env_var('POSTGRES_USER', 'mec_inep_user') }}"
+      password: "{{ env_var('POSTGRES_PASSWORD', '') }}"
+    # Schema onde o SQLMesh guarda seu próprio estado (versionamento de
+    # modelos, snapshots etc.) — mantido separado dos dados de negócio.
+    state_schema: sqlmesh_state
+
+default_gateway: postgres
+
+# Evita chamadas de telemetria anônima para analytics.tobikodata.com — útil em
+# redes restritas (ex.: egress bloqueado) e por padrão de privacidade do projeto.
+disable_anonymized_analytics: true
+
+model_defaults:
+  dialect: postgres
+  # Schema padrão para modelos que não especificam um schema explícito no nome.
+  start: 2024-01-01

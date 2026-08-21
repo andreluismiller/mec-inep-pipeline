@@ -1,0 +1,43 @@
+# Testes unitários do SQLMesh: rodam com `sqlmesh test`, sem precisar de um
+# Postgres populado — o SQLMesh substitui as tabelas de entrada por estes dados
+# fixos e compara a saída da query do modelo com o `outputs.query.rows` esperado.
+
+test_int_escolas_classificadas_rede_privada:
+  model: intermediate.int_escolas_classificadas
+  inputs:
+    staging.stg_censo_escolar_escolas:
+      rows:
+        - id_escola: 1
+          nome_escola: "Escola Privada Teste"
+          sigla_uf: "SP"
+          ano_censo: 2024
+          cd_dependencia_administrativa: "4"
+  outputs:
+    query:
+      rows:
+        - id_escola: 1
+          nome_escola: "Escola Privada Teste"
+          sigla_uf: "SP"
+          ano_censo: 2024
+          cd_dependencia_administrativa: "4"
+          rede: "privada"
+
+test_int_escolas_classificadas_rede_publica:
+  model: intermediate.int_escolas_classificadas
+  inputs:
+    staging.stg_censo_escolar_escolas:
+      rows:
+        - id_escola: 2
+          nome_escola: "Escola Municipal Teste"
+          sigla_uf: "BA"
+          ano_censo: 2024
+          cd_dependencia_administrativa: "3"
+  outputs:
+    query:
+      rows:
+        - id_escola: 2
+          nome_escola: "Escola Municipal Teste"
+          sigla_uf: "BA"
+          ano_censo: 2024
+          cd_dependencia_administrativa: "3"
+          rede: "publica"

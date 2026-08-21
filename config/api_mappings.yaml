@@ -1,0 +1,71 @@
+# ==============================================================================
+# Mapeamentos "valor real" -> "identificador usado como parâmetro de API"
+# ------------------------------------------------------------------------------
+# Usado por src/mec_inep_pipeline/extract/sources/api_source.py para traduzir
+# valores legíveis (definidos em config/sources.yaml ou passados via CLI) nos
+# códigos que as APIs do MEC/INEP efetivamente esperam.
+#
+# Mantemos isso em YAML (em vez de hardcoded no Python) para que a tabela de
+# correspondência possa ser atualizada sem alterar código.
+# ==============================================================================
+
+version: 1
+
+# ---------------------------------------------------------------------------
+# Unidades da Federação -> código IBGE (usado pela maioria das APIs do INEP)
+# ---------------------------------------------------------------------------
+uf:
+  "Acre": "12"
+  "Alagoas": "27"
+  "Amapá": "16"
+  "Amazonas": "13"
+  "Bahia": "29"
+  "Ceará": "23"
+  "Distrito Federal": "53"
+  "Espírito Santo": "32"
+  "Goiás": "52"
+  "Maranhão": "21"
+  "Mato Grosso": "51"
+  "Mato Grosso do Sul": "50"
+  "Minas Gerais": "31"
+  "Pará": "15"
+  "Paraíba": "25"
+  "Paraná": "41"
+  "Pernambuco": "26"
+  "Piauí": "22"
+  "Rio de Janeiro": "33"
+  "Rio Grande do Norte": "24"
+  "Rio Grande do Sul": "43"
+  "Rondônia": "11"
+  "Roraima": "14"
+  "Santa Catarina": "42"
+  "São Paulo": "35"
+  "Sergipe": "28"
+  "Tocantins": "17"
+
+# ---------------------------------------------------------------------------
+# Etapa de ensino -> código usado pelas APIs de indicadores educacionais
+# ---------------------------------------------------------------------------
+etapa_ensino:
+  "Educação Infantil": "1"
+  "Ensino Fundamental - Anos Iniciais": "2"
+  "Ensino Fundamental - Anos Finais": "3"
+  "Ensino Médio": "4"
+  "Educação de Jovens e Adultos": "5"
+  "Educação Profissional": "6"
+
+# ---------------------------------------------------------------------------
+# Dependência administrativa -> código usado no Censo Escolar / APIs INEP
+# ---------------------------------------------------------------------------
+dependencia_administrativa:
+  "Federal": "1"
+  "Estadual": "2"
+  "Municipal": "3"
+  "Privada": "4"
+
+# ---------------------------------------------------------------------------
+# Localização -> código usado no Censo Escolar / APIs INEP
+# ---------------------------------------------------------------------------
+localizacao:
+  "Urbana": "1"
+  "Rural": "2"

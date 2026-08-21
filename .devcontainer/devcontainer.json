@@ -1,0 +1,55 @@
+{
+  "name": "mec-inep-pipeline (dlt + sqlmesh)",
+
+  // Usa o docker-compose para subir o app (Python/uv) junto com um Postgres local de dev.
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopCompose",
+
+  // Máquina recomendada dentro do tier gratuito de Codespaces para contas pessoais
+  // (2-core / 8GB é o menor tamanho pago comum; 2-core/4GB cabe no crédito mensal gratuito).
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "4gb",
+    "storage": "32gb"
+  },
+
+  "remoteUser": "vscode",
+
+  "forwardPorts": [5432],
+  "portsAttributes": {
+    "5432": {
+      "label": "Postgres (dev)",
+      "onAutoForward": "silent"
+    }
+  },
+
+  // Roda uma única vez, na criação do Codespace/container.
+  "postCreateCommand": "bash .devcontainer/post_create.sh",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "redhat.vscode-yaml",
+        "ms-azuretools.vscode-docker",
+        "tamasfe.even-better-toml",
+        "eamodio.gitlens"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/workspace/.venv/bin/python",
+        "python.testing.pytestEnabled": true,
+        "python.testing.pytestArgs": ["tests"],
+        "editor.formatOnSave": true,
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+          }
+        }
+      }
+    }
+  }
+}

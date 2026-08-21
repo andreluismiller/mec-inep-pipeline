@@ -1,0 +1,111 @@
+# ==============================================================================
+# Catálogo de fontes de dados — MEC / INEP
+# ------------------------------------------------------------------------------
+# Cada entrada descreve UMA fonte que será extraída por um dlt resource.
+# O código em src/mec_inep_pipeline/extract/sources/*.py lê este arquivo via
+# src/mec_inep_pipeline/config/loader.py e usa os campos abaixo para parametrizar
+# a extração (URL/caminho, formato, chave primária, destino no Postgres etc.).
+#
+# type: csv | xlsx | api  -> decide qual módulo de extração (src/extract/sources/) é usado.
+# ==============================================================================
+
+version: 1
+
+sources:
+
+  # ---------------------------------------------------------------------------
+  # Censo Escolar — microdados de Escolas (arquivo grande, 50-200MB, CSV)
+  # ---------------------------------------------------------------------------
+  censo_escolar_escolas:
+    description: "Microdados do Censo Escolar da Educação Básica - Escolas"
+    type: csv
+    enabled: true
+    format:
+      delimiter: ";"
+      encoding: "latin-1"
+      has_header: true
+    location:
+      # Em produção, aponte para a URL oficial de download do INEP (dados abertos).
+      # Em dev/teste, pode apontar para um caminho local (data/raw/...).
+      url: "https://download.inep.gov.br/dados_abertos/microdados/microdados_censo_escolar_2024.zip"
+      file_glob: "escolas.csv"
+      local_fallback_path: "data/raw/censo_escolar/escolas.csv"
+    primary_key: ["CO_ENTIDADE"]
+    incremental:
+      cursor_field: "NU_ANO_CENSO"
+    write_disposition: merge
+    destination:
+      table: censo_escolar_escolas
+
+  # ---------------------------------------------------------------------------
+  # Censo Escolar — microdados de Turmas (arquivo grande, CSV)
+  # ---------------------------------------------------------------------------
+  censo_escolar_turmas:
+    description: "Microdados do Censo Escolar da Educação Básica - Turmas"
+    type: csv
+    enabled: true
+    format:
+      delimiter: ";"
+      encoding: "latin-1"
+      has_header: true
+    location:
+      url: "https://download.inep.gov.br/dados_abertos/microdados/microdados_censo_escolar_2024.zip"
+      file_glob: "turmas.csv"
+      local_fallback_path: "data/raw/censo_escolar/turmas.csv"
+    primary_key: ["CO_TURMA"]
+    incremental:
+      cursor_field: "NU_ANO_CENSO"
+    write_disposition: merge
+    destination:
+      table: censo_escolar_turmas
+
+  # ---------------------------------------------------------------------------
+  # Sinopse Estatística da Educação Básica (planilha XLSX, por município)
+  # ---------------------------------------------------------------------------
+  sinopse_educacao_basica_municipios:
+    description: "Sinopse Estatística da Educação Básica - agregados por município"
+    type: xlsx
+    enabled: true
+    format:
+      sheet_name: "Município"
+      header_row: 8         # linhas iniciais do INEP costumam ter cabeçalho/nota explicativa
+      skip_footer_rows: 3    # notas de rodapé ao final da planilha
+    location:
+      url: "https://download.inep.gov.br/dados_abertos/sinopses_estatisticas/sinopse_educacao_basica_2024.xlsx"
+      local_fallback_path: "data/raw/sinopses/sinopse_educacao_basica_2024.xlsx"
+    primary_key: ["CO_MUNICIPIO", "NU_ANO_CENSO"]
+    write_disposition: replace
+    destination:
+      table: sinopse_educacao_basica_municipios
+
+  # ---------------------------------------------------------------------------
+  # API de Indicadores Educacionais do INEP
+  # ---------------------------------------------------------------------------
+  indicadores_educacionais_api:
+    description: "Indicadores educacionais (IDEB, taxas de rendimento etc.) via API do INEP"
+    type: api
+    enabled: true
+    location:
+      base_url_env: INEP_API_BASE_URL   # nome da variável de ambiente com a URL base
+      token_env: INEP_API_TOKEN         # nome da variável de ambiente com o token (se houver)
+      endpoint: "/v1/indicadores-educacionais"
+    request:
+      method: GET
+      # Os parâmetros abaixo usam identificadores de config/api_mappings.yaml,
+      # não os nomes/valores "reais" (ex.: a API espera o código da UF, não "São Paulo").
+      params:
+        - name: uf
+          from_mapping: uf
+        - name: etapa
+          from_mapping: etapa_ensino
+        - name: ano
+          static: 2024
+    pagination:
+      type: page_number
+      page_param: "pagina"
+      size_param: "tamanhoPagina"
+      page_size: 100
+    primary_key: ["CO_ENTIDADE", "NU_ANO_CENSO", "CO_INDICADOR"]
+    write_disposition: merge
+    destination:
+      table: indicadores_educacionais

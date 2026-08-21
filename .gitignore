@@ -1,0 +1,66 @@
+# ==== Python ====
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# ==== Ambientes virtuais ====
+.venv
+venv/
+
+# ==== Credenciais e segredos ====
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ==== dlt (estado de pipelines, credenciais locais) ====
+.dlt/secrets.toml
+**/.dlt/secrets.toml
+
+# ==== SQLMesh (cache local, estado) ====
+sqlmesh/.cache/
+sqlmesh/logs/
+.sqlmesh_cache/
+
+# ==== Dados baixados/processados localmente ====
+# As fontes MEC/INEP são grandes (50-200MB) e não devem ir para o Git.
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+*.csv
+*.xlsx
+*.xls
+*.parquet
+!tests/fixtures/**/*.csv
+!tests/fixtures/**/*.xlsx
+
+# ==== Logs ====
+logs/*
+!logs/.gitkeep
+*.log
+
+# ==== Testes / cobertura ====
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# ==== Type checking ====
+.mypy_cache/
+.ruff_cache/
+
+# ==== IDEs / SO ====
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# ==== Codespaces / devcontainer runtime ====
+.devcontainer/postgres-data/

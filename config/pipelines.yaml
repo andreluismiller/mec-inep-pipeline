@@ -1,0 +1,40 @@
+# ==============================================================================
+# Registro de pipelines dlt
+# ------------------------------------------------------------------------------
+# Cada pipeline agrupa uma ou mais fontes (definidas em config/sources.yaml)
+# que fazem sentido rodar/monitorar juntas, e define para onde os dados vão
+# no Postgres (schema "raw", conforme POSTGRES_RAW_SCHEMA no .env).
+#
+# src/mec_inep_pipeline/extract/pipelines/run.py lê este arquivo para saber
+# quais dlt.pipeline() instanciar e quais sources anexar a cada um.
+# ==============================================================================
+
+version: 1
+
+pipelines:
+
+  censo_escolar:
+    description: "Extração dos microdados do Censo Escolar (arquivos CSV grandes)"
+    destination: postgres
+    dataset_name: "${POSTGRES_RAW_SCHEMA}"   # resolvido a partir do .env
+    sources:
+      - censo_escolar_escolas
+      - censo_escolar_turmas
+    schedule: "0 6 * * *"     # referência apenas (cron), não agenda nada sozinho
+    progress: log             # log | tqdm | alive_progress (ver docs do dlt)
+
+  sinopses_estatisticas:
+    description: "Extração das Sinopses Estatísticas (planilhas XLSX)"
+    destination: postgres
+    dataset_name: "${POSTGRES_RAW_SCHEMA}"
+    sources:
+      - sinopse_educacao_basica_municipios
+    schedule: "0 6 1 * *"     # mensal, referência apenas
+
+  indicadores_api:
+    description: "Extração de indicadores educacionais via API do INEP"
+    destination: postgres
+    dataset_name: "${POSTGRES_RAW_SCHEMA}"
+    sources:
+      - indicadores_educacionais_api
+    schedule: "0 8 * * 1"     # semanal, referência apenas
