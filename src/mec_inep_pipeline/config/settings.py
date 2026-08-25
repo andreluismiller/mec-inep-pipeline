@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     inep_api_token: SecretStr = Field(default=SecretStr(""), alias="INEP_API_TOKEN")
     mec_api_base_url: str = Field(default="https://api.mec.gov.br", alias="MEC_API_BASE_URL")
     mec_api_token: SecretStr = Field(default=SecretStr(""), alias="MEC_API_TOKEN")
+    ibge_api_base_url: str = Field(
+        default="https://servicodados.ibge.gov.br/api", alias="IBGE_API_BASE_URL"
+    )
 
     # ---- dlt ----
     dlt_pipeline_name: str = Field(default="mec_inep_pipeline", alias="DLT_PIPELINE_NAME")
