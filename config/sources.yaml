@@ -118,7 +118,7 @@ sources:
     type: xlsx
     enabled: true
     format:
-      sheet_name: null # ajuste se a planilha tiver nome específico
+      sheet_name: "IDEB_Escolas (Anos_Iniciais)"
       header_row: 10 # linha do cabeçalho no arquivo original
       skip_footer_rows: 0 # não há rodapé relevante
       unpivot:
@@ -134,7 +134,7 @@ sources:
           VL_PROJECAO: vl_projecao
     location:
       url: ""
-      local_fallback_path: "data/raw/ideb/ideb_escolas_2005_2025.xlsx"
+      local_fallback_path: "data/raw/ideb/divulgacao_anos_iniciais_escolas_2025.xlsx"
     primary_key: ["id_escola", "ano_ref"]
     write_disposition: replace
     destination:
