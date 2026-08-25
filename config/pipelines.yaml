@@ -12,16 +12,15 @@
 version: 1
 
 pipelines:
-
   censo_escolar:
     description: "Extração dos microdados do Censo Escolar (arquivos CSV grandes)"
     destination: postgres
-    dataset_name: "${POSTGRES_RAW_SCHEMA}"   # resolvido a partir do .env
+    dataset_name: "${POSTGRES_RAW_SCHEMA}" # resolvido a partir do .env
     sources:
       - censo_escolar_escolas
       - censo_escolar_turmas
-    schedule: "0 6 * * *"     # referência apenas (cron), não agenda nada sozinho
-    progress: log             # log | tqdm | alive_progress (ver docs do dlt)
+    schedule: "0 6 * * *" # referência apenas (cron), não agenda nada sozinho
+    progress: log # log | tqdm | alive_progress (ver docs do dlt)
 
   sinopses_estatisticas:
     description: "Extração das Sinopses Estatísticas (planilhas XLSX)"
@@ -29,7 +28,7 @@ pipelines:
     dataset_name: "${POSTGRES_RAW_SCHEMA}"
     sources:
       - sinopse_educacao_basica_municipios
-    schedule: "0 6 1 * *"     # mensal, referência apenas
+    schedule: "0 6 1 * *" # mensal, referência apenas
 
   indicadores_api:
     description: "Extração de indicadores educacionais via API do INEP"
@@ -37,4 +36,12 @@ pipelines:
     dataset_name: "${POSTGRES_RAW_SCHEMA}"
     sources:
       - indicadores_educacionais_api
-    schedule: "0 8 * * 1"     # semanal, referência apenas
+    schedule: "0 8 * * 1" # semanal, referência apenas
+
+  ideb_indicadores_escolas:
+    description: "Extração dos indicadores educacionais por escola (IDEB)"
+    destination: postgres
+    dataset_name: "${POSTGRES_RAW_SCHEMA}"
+    sources:
+      - ideb_indicadores_escolas
+    schedule: "0 6 2 * *" # ex.: dia 2 às 6h, apenas referência
