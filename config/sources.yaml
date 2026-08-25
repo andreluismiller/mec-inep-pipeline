@@ -12,7 +12,6 @@
 version: 1
 
 sources:
-
   # ---------------------------------------------------------------------------
   # Censo Escolar — microdados de Escolas (arquivo grande, 50-200MB, CSV)
   # ---------------------------------------------------------------------------
@@ -68,8 +67,8 @@ sources:
     enabled: true
     format:
       sheet_name: "Município"
-      header_row: 8         # linhas iniciais do INEP costumam ter cabeçalho/nota explicativa
-      skip_footer_rows: 3    # notas de rodapé ao final da planilha
+      header_row: 8 # linhas iniciais do INEP costumam ter cabeçalho/nota explicativa
+      skip_footer_rows: 3 # notas de rodapé ao final da planilha
     location:
       url: "https://download.inep.gov.br/dados_abertos/sinopses_estatisticas/sinopse_educacao_basica_2024.xlsx"
       local_fallback_path: "data/raw/sinopses/sinopse_educacao_basica_2024.xlsx"
@@ -86,8 +85,8 @@ sources:
     type: api
     enabled: true
     location:
-      base_url_env: INEP_API_BASE_URL   # nome da variável de ambiente com a URL base
-      token_env: INEP_API_TOKEN         # nome da variável de ambiente com o token (se houver)
+      base_url_env: INEP_API_BASE_URL # nome da variável de ambiente com a URL base
+      token_env: INEP_API_TOKEN # nome da variável de ambiente com o token (se houver)
       endpoint: "/v1/indicadores-educacionais"
     request:
       method: GET
@@ -109,3 +108,34 @@ sources:
     write_disposition: merge
     destination:
       table: indicadores_educacionais
+
+  # ---------------------------------------------------------------------------
+  # Indicadores educacionais por escola (IDEB, notas, rendimento)
+  # Série histórica de anos ímpares 2005–2025
+  # ---------------------------------------------------------------------------
+  ideb_indicadores_escolas:
+    description: "Indicadores educacionais por escola (IDEB, notas, rendimento)"
+    type: xlsx
+    enabled: true
+    format:
+      sheet_name: null # ajuste se a planilha tiver nome específico
+      header_row: 10 # linha do cabeçalho no arquivo original
+      skip_footer_rows: 0 # não há rodapé relevante
+      unpivot:
+        id_column: "ID_ESCOLA"
+        years:
+          [2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019, 2021, 2023, 2025]
+        field_prefixes:
+          VL_INDICADOR_REND: vl_indicador_rend
+          VL_NOTA_MATEMATICA: vl_nota_matematica
+          VL_NOTA_PORTUGUES: vl_nota_portugues
+          VL_NOTA_MEDIA: vl_nota_media
+          VL_OBSERVADO: vl_observado
+          VL_PROJECAO: vl_projecao
+    location:
+      url: ""
+      local_fallback_path: "data/raw/ideb/ideb_escolas_2005_2025.xlsx"
+    primary_key: ["id_escola", "ano_ref"]
+    write_disposition: replace
+    destination:
+      table: ideb_indicadores_escolas
