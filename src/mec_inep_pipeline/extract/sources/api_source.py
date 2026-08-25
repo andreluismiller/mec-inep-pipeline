@@ -25,6 +25,11 @@ DEFAULT_TIMEOUT_SECONDS = 30
 DEFAULT_MAX_PAGES = 1000  # trava de segurança contra loops de paginação infinitos
 
 
+def _normalize_dict_keys(record: dict[str, Any]) -> dict[str, Any]:
+    """Normaliza as chaves de um dict: minúsculas e '-' trocado por '_'."""
+    return {str(k).lower().replace("-", "_"): v for k, v in record.items()}
+
+
 def _build_request_params(source_config: dict[str, Any]) -> dict[str, Any]:
     """Monta o dict de query params, resolvendo `from_mapping` quando presente."""
     params: dict[str, Any] = {}
@@ -57,7 +62,20 @@ def _iter_pages(source_config: dict[str, Any]) -> Iterator[list[dict[str, Any]]]
     method = source_config.get("request", {}).get("method", "GET")
     base_params = _build_request_params(source_config)
 
-    pagination = source_config.get("pagination", {})
+    pagination = source_config.get("pagination")
+    if not pagination:
+        # Sem paginação: faz uma única requisição
+        logger.debug("Chamando API %s (sem paginação)", url)
+        response = requests.request(
+            method, url, headers=headers, params=base_params, timeout=DEFAULT_TIMEOUT_SECONDS
+        )
+        response.raise_for_status()
+        payload = response.json()
+        items = payload if isinstance(payload, list) else payload.get("data", [])
+        if items:
+            yield items
+        return
+
     page_param = pagination.get("page_param", "page")
     size_param = pagination.get("size_param", "size")
     page_size = pagination.get("page_size", 100)
@@ -72,7 +90,6 @@ def _iter_pages(source_config: dict[str, Any]) -> Iterator[list[dict[str, Any]]]
         response.raise_for_status()
         payload = response.json()
 
-        # Aceita tanto uma lista "crua" quanto um envelope comum {"data": [...]}
         items = payload if isinstance(payload, list) else payload.get("data", [])
         if not items:
             break
@@ -95,6 +112,9 @@ def build_api_resource(source_name: str, source_config: dict[str, Any]) -> Any:
     write_disposition = source_config.get("write_disposition", "merge")
     table_name = source_config.get("destination", {}).get("table", source_name)
 
+    # Normalização de chaves (para APIs como a do IBGE)
+    normalize_keys = bool(source_config.get("normalize_keys", False))
+
     @dlt.resource(
         name=source_name,
         table_name=table_name,
@@ -104,6 +124,8 @@ def build_api_resource(source_name: str, source_config: dict[str, Any]) -> Any:
     def resource() -> Iterator[dict[str, Any]]:
         for page_items in _iter_pages(source_config):
             for item in page_items:
+                if normalize_keys:
+                    item = _normalize_dict_keys(item)
                 yield apply_minimal_transformations(item)
 
     return resource
