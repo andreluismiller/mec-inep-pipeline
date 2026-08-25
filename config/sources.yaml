@@ -110,6 +110,29 @@ sources:
       table: indicadores_educacionais
 
   # ---------------------------------------------------------------------------
+  # API de Localidades do IBGE — municípios brasileiros (JSON)
+  # ---------------------------------------------------------------------------
+  ibge_municipios:
+    description: "Relação de municípios brasileiros com informações hierárquicas"
+    type: api
+    enabled: true
+    location:
+      base_url_env: IBGE_API_BASE_URL # ex.: https://servicodados.ibge.gov.br/api/v1
+      token_env: "" # não há token
+      endpoint: "/v1/localidades/municipios"
+    request:
+      method: GET
+      params:
+        - name: view
+          static: nivelado
+    # Sem pagination, pois a API retorna todos os registros de uma vez
+    normalize_keys: true # aplica lowercase + underscore nas chaves
+    primary_key: ["municipio_id"]
+    write_disposition: replace # ou merge, conforme necessidade
+    destination:
+      table: ibge_municipios
+
+  # ---------------------------------------------------------------------------
   # Indicadores educacionais por escola (IDEB, notas, rendimento)
   # Série histórica de anos ímpares 2005–2025
   # ---------------------------------------------------------------------------
