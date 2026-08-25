@@ -45,3 +45,11 @@ pipelines:
     sources:
       - ideb_indicadores_escolas
     schedule: "0 6 2 * *" # ex.: dia 2 às 6h, apenas referência
+
+  ibge_localidades:
+    description: "Extração das localidades (municípios) do IBGE"
+    destination: postgres
+    dataset_name: "${POSTGRES_RAW_SCHEMA}"
+    sources:
+      - ibge_municipios
+    schedule: "0 6 1 * *" # exemplo, apenas referência
