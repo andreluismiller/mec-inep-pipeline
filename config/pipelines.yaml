@@ -17,7 +17,7 @@ pipelines:
     destination: postgres
     dataset_name: "${POSTGRES_RAW_SCHEMA}" # resolvido a partir do .env
     sources:
-      - censo_escolar_escolas
+      - lista_escolar_escolas
       - censo_escolar_turmas
     schedule: "0 6 * * *" # referência apenas (cron), não agenda nada sozinho
     progress: log # log | tqdm | alive_progress (ver docs do dlt)
