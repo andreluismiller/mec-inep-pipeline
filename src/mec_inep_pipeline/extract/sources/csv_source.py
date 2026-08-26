@@ -9,6 +9,7 @@ buffering/chunking na hora de escrever no destino.
 from __future__ import annotations
 
 import csv
+import unicodedata
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -20,6 +21,22 @@ from mec_inep_pipeline.load.normalizers import apply_minimal_transformations
 from mec_inep_pipeline.utils.logging import get_logger
 
 logger = get_logger(__name__)
+
+
+def _normalize_column_name(name: str) -> str:
+    """Normaliza um nome de coluna para o padrão snake_case.
+
+    Converte para minúsculas, remove acentos (incluindo cedilha),
+    e substitui espaços por underscores.
+    """
+    # Normaliza caracteres acentuados (ex.: 'ç' -> 'c' + cedilha combinante)
+    nfkd = unicodedata.normalize("NFKD", name)
+    # Remove caracteres não-ASCII (aplica-se a acentos, cedilha, etc.)
+    ascii_name = nfkd.encode("ASCII", "ignore").decode("ASCII")
+    # Converte para minúsculas
+    lower = ascii_name.lower()
+    # Substitui espaços por underscores
+    return lower.replace(" ", "_")
 
 
 def _resolve_local_path(source_config: dict[str, Any]) -> Path:
@@ -39,11 +56,34 @@ def _resolve_local_path(source_config: dict[str, Any]) -> Path:
     return REPO_ROOT / local_path
 
 
-def _read_csv_rows(path: Path, *, delimiter: str, encoding: str) -> Iterator[dict[str, Any]]:
-    """Gera dicts a partir de um arquivo CSV, linha a linha (streaming)."""
+def _read_csv_rows(
+    path: Path,
+    *,
+    delimiter: str,
+    encoding: str,
+    normalize_headers: bool = False,
+) -> Iterator[dict[str, Any]]:
+    """Gera dicts a partir de um arquivo CSV, linha a linha (streaming).
+
+    Se `normalize_headers` for True, as chaves dos dicts serão normalizadas
+    (minúsculas, sem acentos, espaços → underscore).
+    """
     with path.open("r", encoding=encoding, newline="") as f:
         reader = csv.DictReader(f, delimiter=delimiter)
-        yield from reader
+
+        if normalize_headers and reader.fieldnames:
+            # Mapeia os nomes originais para os normalizados
+            normalized_map = {
+                original: _normalize_column_name(original) for original in reader.fieldnames
+            }
+        else:
+            normalized_map = None
+
+        for row in reader:
+            if normalized_map:
+                # Cria um novo dicionário com chaves normalizadas
+                row = {normalized_map[k]: v for k, v in row.items()}
+            yield row
 
 
 def build_csv_resource(source_name: str, source_config: dict[str, Any]) -> Any:
@@ -56,6 +96,8 @@ def build_csv_resource(source_name: str, source_config: dict[str, Any]) -> Any:
     fmt = source_config.get("format", {})
     delimiter = fmt.get("delimiter", ",")
     encoding = fmt.get("encoding", "utf-8")
+    normalize_headers = bool(fmt.get("normalize_headers", False))
+
     # Tipado explicitamente como Any: primary_key pode ser str, list[str] ou
     # None dependendo do YAML, e o decorator @dlt.resource aceita todas essas
     # formas — a anotação evita que o mypy infira "Any | None" (que não é
@@ -80,8 +122,19 @@ def build_csv_resource(source_name: str, source_config: dict[str, Any]) -> Any:
                 source_name,
             )
             return
-        logger.info("Lendo CSV de %s (delimiter=%r, encoding=%r)", path, delimiter, encoding)
-        for row in _read_csv_rows(path, delimiter=delimiter, encoding=encoding):
+        logger.info(
+            "Lendo CSV de %s (delimiter=%r, encoding=%r, normalize_headers=%r)",
+            path,
+            delimiter,
+            encoding,
+            normalize_headers,
+        )
+        for row in _read_csv_rows(
+            path,
+            delimiter=delimiter,
+            encoding=encoding,
+            normalize_headers=normalize_headers,
+        ):
             yield apply_minimal_transformations(row)
 
     return resource
