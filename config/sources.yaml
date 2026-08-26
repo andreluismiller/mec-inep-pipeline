@@ -15,26 +15,22 @@ sources:
   # ---------------------------------------------------------------------------
   # Censo Escolar — microdados de Escolas (arquivo grande, 50-200MB, CSV)
   # ---------------------------------------------------------------------------
-  censo_escolar_escolas:
-    description: "Microdados do Censo Escolar da Educação Básica - Escolas"
+  lista_escolar_escolas:
+    description: "Lista de Escolas da Educação Básica - Brasil (arquivo local)"
     type: csv
     enabled: true
     format:
       delimiter: ";"
       encoding: "latin-1"
       has_header: true
+      normalize_headers: true # ativa normalização dos nomes das colunas
     location:
-      # Em produção, aponte para a URL oficial de download do INEP (dados abertos).
-      # Em dev/teste, pode apontar para um caminho local (data/raw/...).
-      url: "https://download.inep.gov.br/dados_abertos/microdados/microdados_censo_escolar_2024.zip"
-      file_glob: "escolas.csv"
-      local_fallback_path: "data/raw/censo_escolar/escolas.csv"
-    primary_key: ["CO_ENTIDADE"]
-    incremental:
-      cursor_field: "NU_ANO_CENSO"
-    write_disposition: merge
+      # Como o arquivo já está em data/raw, não são necessários url/file_glob.
+      local_fallback_path: "data/raw/Análise - Tabela da lista das escolas - Detalhado.csv"
+    primary_key: ["codigo_inep"] # nome normalizado da coluna "Código INEP"
+    write_disposition: merge # ou "replace" se preferir recriar a tabela
     destination:
-      table: censo_escolar_escolas
+      table: lista_escolas
 
   # ---------------------------------------------------------------------------
   # Censo Escolar — microdados de Turmas (arquivo grande, CSV)
